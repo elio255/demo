@@ -3,42 +3,46 @@ services:
     image: mysql:8.0
     container_name: demo-mysql
     restart: unless-stopped
+
+    # Hard RAM cap (important on OCI free-tier)
+    mem_limit: 450m
+
     environment:
       MYSQL_ROOT_PASSWORD: root1234
-      MYSQL_DATABASE: carss
-      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: appdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
     ports:
-      - "127.0.0.1:3307:3306"
-    networks:
-      - demo-network
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot1234"]
       interval: 10s
       timeout: 5s
       retries: 10
-    volumes:
-      - mysql-data:/var/lib/mysql
 
   app:
     build: .
     container_name: demo-app
     restart: unless-stopped
+
+    # Hard RAM cap for the backend
+    mem_limit: 450m
+
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/carss?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root1234
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/appdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: apppass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_OPEN_IN_VIEW: "false"
     ports:
       - "8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
-    networks:
-      - demo-network
-
-networks:
-  demo-network:
-    driver: bridge
 
 volumes:
   mysql-data:

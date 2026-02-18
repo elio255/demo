@@ -2,8 +2,11 @@ server:
   port: 8080
 
 spring:
+  application:
+    name: demo
+
   datasource:
-    url: jdbc:mysql://localhost:3307/carss?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://demo-mysql:3306/carss?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -12,3 +15,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
